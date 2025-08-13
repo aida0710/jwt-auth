@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/aida0710/jwt-auth/internal/domain"
@@ -56,7 +57,7 @@ func (r *projectRepository) GetByID(ctx context.Context, id string) (*domain.Pro
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.GetContext(ctx, &project, query, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err

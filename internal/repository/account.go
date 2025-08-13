@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/aida0710/jwt-auth/internal/domain"
@@ -56,7 +57,7 @@ func (r *accountRepository) GetByID(ctx context.Context, id string) (*domain.Acc
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.GetContext(ctx, &account, query, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
@@ -78,7 +79,7 @@ func (r *accountRepository) GetByEmail(ctx context.Context, email string) (*doma
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.GetContext(ctx, &account, query, email)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
