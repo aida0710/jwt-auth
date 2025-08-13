@@ -163,7 +163,6 @@ func (u *accountUsecase) Delete(ctx context.Context, id string) error {
 		return err
 	}
 
-	// トランザクション内で実行
 	return u.txManager.RunInTransaction(ctx, func(ctx context.Context) error {
 		account, err := u.accountRepo.GetByID(ctx, id)
 		if err != nil {

@@ -16,7 +16,7 @@ type accountRepository struct {
 	db *sqlx.DB
 }
 
-// NewAccountRepository 新しいアカウントリポジトリを作成
+// NewAccountRepository アカウントリポジトリを作成
 func NewAccountRepository(db *sqlx.DB) domain.AccountRepository {
 	return &accountRepository{
 		db: db,
@@ -34,7 +34,6 @@ func (r *accountRepository) Create(ctx context.Context, account *domain.Account)
 	account.CreatedAt = now
 	account.UpdatedAt = now
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	_, err := exec.NamedExecContext(ctx, query, account)
 	if err != nil {
@@ -53,7 +52,6 @@ func (r *accountRepository) GetByID(ctx context.Context, id string) (*domain.Acc
 		WHERE id = ?
 	`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.GetContext(ctx, &account, query, id)
 	if err != nil {
@@ -75,7 +73,6 @@ func (r *accountRepository) GetByEmail(ctx context.Context, email string) (*doma
 		WHERE email = ?
 	`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.GetContext(ctx, &account, query, email)
 	if err != nil {
@@ -98,7 +95,6 @@ func (r *accountRepository) List(ctx context.Context, limit, offset int) ([]*dom
 		LIMIT ? OFFSET ?
 	`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.SelectContext(ctx, &accounts, query, limit, offset)
 	if err != nil {
@@ -118,7 +114,6 @@ func (r *accountRepository) Update(ctx context.Context, account *domain.Account)
 
 	account.UpdatedAt = time.Now()
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	result, err := exec.NamedExecContext(ctx, query, account)
 	if err != nil {
@@ -141,7 +136,6 @@ func (r *accountRepository) Update(ctx context.Context, account *domain.Account)
 func (r *accountRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM accounts WHERE id = ?`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	result, err := exec.ExecContext(ctx, query, id)
 	if err != nil {
@@ -165,7 +159,6 @@ func (r *accountRepository) Count(ctx context.Context) (int, error) {
 	var count int
 	query := `SELECT COUNT(*) FROM accounts`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.GetContext(ctx, &count, query)
 	if err != nil {

@@ -16,7 +16,7 @@ type projectRepository struct {
 	db *sqlx.DB
 }
 
-// NewProjectRepository 新しいプロジェクトリポジトリを作成
+// NewProjectRepository プロジェクトリポジトリを作成
 func NewProjectRepository(db *sqlx.DB) domain.ProjectRepository {
 	return &projectRepository{
 		db: db,
@@ -34,7 +34,6 @@ func (r *projectRepository) Create(ctx context.Context, project *domain.Project)
 	project.CreatedAt = now
 	project.UpdatedAt = now
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	_, err := exec.NamedExecContext(ctx, query, project)
 	if err != nil {
@@ -53,7 +52,6 @@ func (r *projectRepository) GetByID(ctx context.Context, id string) (*domain.Pro
 		WHERE id = ?
 	`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.GetContext(ctx, &project, query, id)
 	if err != nil {
@@ -77,7 +75,6 @@ func (r *projectRepository) GetByAccountID(ctx context.Context, accountID string
 		LIMIT ? OFFSET ?
 	`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.SelectContext(ctx, &projects, query, accountID, limit, offset)
 	if err != nil {
@@ -97,7 +94,6 @@ func (r *projectRepository) List(ctx context.Context, limit, offset int) ([]*dom
 		LIMIT ? OFFSET ?
 	`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.SelectContext(ctx, &projects, query, limit, offset)
 	if err != nil {
@@ -117,7 +113,6 @@ func (r *projectRepository) Update(ctx context.Context, project *domain.Project)
 
 	project.UpdatedAt = time.Now()
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	result, err := exec.NamedExecContext(ctx, query, project)
 	if err != nil {
@@ -140,7 +135,6 @@ func (r *projectRepository) Update(ctx context.Context, project *domain.Project)
 func (r *projectRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM projects WHERE id = ?`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	result, err := exec.ExecContext(ctx, query, id)
 	if err != nil {
@@ -163,7 +157,6 @@ func (r *projectRepository) Delete(ctx context.Context, id string) error {
 func (r *projectRepository) DeleteByAccountID(ctx context.Context, accountID string) error {
 	query := `DELETE FROM projects WHERE account_id = ?`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	_, err := exec.ExecContext(ctx, query, accountID)
 	if err != nil {
@@ -178,7 +171,6 @@ func (r *projectRepository) CountByAccountID(ctx context.Context, accountID stri
 	var count int
 	query := `SELECT COUNT(*) FROM projects WHERE account_id = ?`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.GetContext(ctx, &count, query, accountID)
 	if err != nil {
@@ -193,7 +185,6 @@ func (r *projectRepository) Count(ctx context.Context) (int, error) {
 	var count int
 	query := `SELECT COUNT(*) FROM projects`
 
-	// トランザクション対応
 	exec := database.GetExecutor(ctx, r.db)
 	err := exec.GetContext(ctx, &count, query)
 	if err != nil {
