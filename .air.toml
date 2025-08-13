@@ -1,0 +1,69 @@
+root = "."
+testdata_dir = "testdata"
+tmp_dir = "tmp"
+
+[build]
+args_bin = []
+# ビルドされたバイナリの場所
+bin = "./tmp/main"
+cmd = "go build -o ./tmp/main ./cmd"
+delay = 1000
+
+exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+exclude_file = []
+exclude_regex = ["_test.go"]
+exclude_unchanged = false
+
+# シンボリックリンクをたどるかどうか
+follow_symlink = true
+full_bin = ""
+
+include_dir = []
+include_ext = ["go"]
+include_file = []
+
+# 古いプロセスを終了するまでの遅延
+kill_delay = "0s"
+# ビルドエラーのログファイル
+log = "build-errors.log"
+
+# デフォルトではfsnotifyを使用して変更検知をしています。
+# しかし、Windows環境ではfsnotifyでは変更検知ができないため、MacやLinux環境以外では使用する必要があります。
+poll = true
+# ポーリング間隔(ミリ秒)
+poll_interval = 300
+
+post_cmd = []
+pre_cmd = []
+
+# ビルド失敗時に前回のバイナリを再実行するかどうか
+rerun = false
+rerun_delay = 500
+# SIGINT シグナルを送信するかどうか
+send_interrupt = false
+# エラー時に停止するかどうか
+stop_on_error = false
+
+[color]
+app = ""
+build = "yellow"
+main = "magenta"
+runner = "green"
+watcher = "cyan"
+error = "red"
+
+[log]
+main_only = false
+silent = false
+# ログにタイムスタンプを表示するかどうか
+time = true
+
+[misc]
+# 終了時に一時ファイルをクリーンアップするかどうか
+clean_on_exit = true
+
+[screen]
+# リビルド時に画面をクリアするかどうか
+clear_on_rebuild = true
+# スクロール位置を保持するかどうか
+keep_scroll = false

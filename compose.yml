@@ -1,0 +1,84 @@
+services:
+  openapi-gen:
+    image: golang:1.24-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: |
+      sh -c "
+        go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest &&
+        oapi-codegen -generate types -package api -o internal/api/types.gen.go api/openapi.yaml &&
+        oapi-codegen -generate echo-server -package api -o internal/api/server.gen.go api/openapi.yaml &&
+        oapi-codegen -generate spec -package api -o internal/api/spec.gen.go api/openapi.yaml &&
+        echo 'OpenAPI code generation completed!'
+      "
+    networks:
+      - app-network
+
+  jwt-backend:
+    build:
+      target: dev
+      context: .
+      args:
+        PORT: ${BACKEND_PORT:-8080}
+    working_dir: /app
+    container_name: backend
+    depends_on:
+      jwt-db:
+        condition: service_healthy
+      openapi-gen:
+        condition: service_completed_successfully
+    ports:
+      - "${BACKEND_PORT:-8080}:${BACKEND_PORT:-8080}"
+    env_file:
+      - .env
+    environment:
+      - BACKEND_PORT=${BACKEND_PORT:-8080}
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=${DB_USER:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_NAME=${DB_NAME:-jwt_auth}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-this-in-production}
+    volumes:
+      - type: bind
+        source: ./
+        target: /app
+      - type: volume
+        source: go-modules
+        target: /go/pkg/mod
+    networks:
+      - app-network
+
+  jwt-db:
+    image: mysql:8.0
+    container_name: db
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-password}
+      - MYSQL_DATABASE=${DB_NAME:-jwt_auth}
+      - TZ=Asia/Tokyo
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./ddl:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+    driver: local
+  go-modules:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
