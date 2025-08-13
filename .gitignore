@@ -36,9 +36,6 @@ bin/
 dist/
 tmp/
 
-# Generated files
-*.gen.go
-
 # Temporary files
 temp/
 *.tmp
