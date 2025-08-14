@@ -12,6 +12,8 @@ servers:
 tags:
   - name: Health
     description: Health check endpoints
+  - name: Auth
+    description: Authentication endpoints
   - name: Accounts
     description: Account management endpoints
   - name: Projects
@@ -36,12 +38,113 @@ paths:
                     type: string
                     example: ok
 
+  /auth/signup:
+    post:
+      operationId: SignUp
+      summary: Sign up a new account
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/login:
+    post:
+      operationId: Login
+      summary: Login with email and password
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/refresh:
+    post:
+      operationId: RefreshToken
+      summary: Refresh access token using refresh token
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/logout:
+    post:
+      operationId: Logout
+      summary: Logout and revoke refresh token
+      tags:
+        - Auth
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '204':
+          description: Logout successful
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /accounts:
     post:
       operationId: CreateAccount
       summary: Create a new account
       tags:
         - Accounts
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -67,6 +170,8 @@ paths:
       summary: List accounts
       tags:
         - Accounts
+      security:
+        - BearerAuth: []
       parameters:
         - in: query
           name: limit
@@ -99,6 +204,8 @@ paths:
       summary: Get an account by ID
       tags:
         - Accounts
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AccountID'
       responses:
@@ -118,6 +225,8 @@ paths:
       summary: Update an account
       tags:
         - Accounts
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AccountID'
       requestBody:
@@ -147,6 +256,8 @@ paths:
       summary: Delete an account
       tags:
         - Accounts
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AccountID'
       responses:
@@ -163,6 +274,8 @@ paths:
       summary: Create a new project
       tags:
         - Projects
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AccountID'
       requestBody:
@@ -190,6 +303,8 @@ paths:
       summary: List projects for an account
       tags:
         - Projects
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AccountID'
         - in: query
@@ -225,6 +340,8 @@ paths:
       summary: Get a project by ID
       tags:
         - Projects
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AccountID'
         - $ref: '#/components/parameters/ProjectID'
@@ -245,6 +362,8 @@ paths:
       summary: Update a project
       tags:
         - Projects
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AccountID'
         - $ref: '#/components/parameters/ProjectID'
@@ -273,6 +392,8 @@ paths:
       summary: Delete a project
       tags:
         - Projects
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AccountID'
         - $ref: '#/components/parameters/ProjectID'
@@ -285,6 +406,12 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   parameters:
     AccountID:
       in: path
@@ -475,9 +602,94 @@ components:
       required:
         - error
 
+    SignUpRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: password123
+        name:
+          type: string
+          example: John Doe
+      required:
+        - email
+        - password
+        - name
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+      required:
+        - email
+        - password
+
+    RefreshTokenRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      required:
+        - refresh_token
+
+    LogoutRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      required:
+        - refresh_token
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refresh_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          example: 3600
+          description: Access token expiration time in seconds
+        account:
+          $ref: '#/components/schemas/Account'
+      required:
+        - access_token
+        - refresh_token
+        - token_type
+        - expires_in
+        - account
+
   responses:
     BadRequest:
       description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
       content:
         application/json:
           schema:
