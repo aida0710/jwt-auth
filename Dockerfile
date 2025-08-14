@@ -4,7 +4,7 @@ FROM golang:1.24-alpine AS codegen
 WORKDIR /app
 
 # OAPIコードジェネレーターをインストール
-ENV OAPI_CODEGEN_VERSION=v2.4.1
+ENV OAPI_CODEGEN_VERSION=v2.5.0
 RUN go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@${OAPI_CODEGEN_VERSION}
 
 # 必要なファイルのみコピー
