@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -40,9 +41,12 @@ type DatabaseConfig struct {
 
 // JWTConfig JWT関連の設定
 type JWTConfig struct {
-	Secret          string
-	ExpireDuration  time.Duration
-	RefreshDuration time.Duration
+	AccessTokenSecret  string
+	RefreshTokenSecret string
+	AccessTokenExpiry  time.Duration
+	RefreshTokenExpiry time.Duration
+	Issuer             string   // JWT発行者
+	Audience           []string // JWT受信者リスト
 }
 
 // LoggerConfig ロガー関連の設定
@@ -75,9 +79,12 @@ func LoadConfig() (*Config, error) {
 			ConnMaxLifetime: getDurationEnv("DB_CONN_MAX_LIFETIME", 5*time.Minute),
 		},
 		JWT: JWTConfig{
-			Secret:          getEnv("JWT_SECRET", "your-secret-key-change-this-in-production"),
-			ExpireDuration:  getDurationEnv("JWT_EXPIRE_DURATION", 1*time.Hour),
-			RefreshDuration: getDurationEnv("JWT_REFRESH_DURATION", 24*time.Hour*7),
+			AccessTokenSecret:  getEnv("JWT_ACCESS_TOKEN_SECRET", getEnv("JWT_SECRET", "your-access-token-secret-change-this-in-production")),
+			RefreshTokenSecret: getEnv("JWT_REFRESH_TOKEN_SECRET", getEnv("JWT_SECRET", "your-refresh-token-secret-change-this-in-production")),
+			AccessTokenExpiry:  getDurationEnv("JWT_ACCESS_TOKEN_EXPIRY", 1*time.Hour),
+			RefreshTokenExpiry: getDurationEnv("JWT_REFRESH_TOKEN_EXPIRY", 30*24*time.Hour),
+			Issuer:             getEnv("JWT_ISSUER", "jwt-auth-api"),
+			Audience:           getSliceEnv("JWT_AUDIENCE", []string{"jwt-auth-api"}),
 		},
 		Logger: LoggerConfig{
 			Level:  getEnv("LOG_LEVEL", "info"),
@@ -99,8 +106,28 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("DB_PASSWORD is required in production environment")
 	}
 
-	if c.JWT.Secret == "your-secret-key-change-this-in-production" && c.Env == "production" {
-		return fmt.Errorf("JWT_SECRET must be changed in production environment")
+	if (c.JWT.AccessTokenSecret == "your-access-token-secret-change-this-in-production" ||
+		c.JWT.RefreshTokenSecret == "your-refresh-token-secret-change-this-in-production") &&
+		c.Env == "production" {
+		return fmt.Errorf("JWT secrets must be changed in production environment")
+	}
+
+	// JWT秘密鍵の長さをチェック（最小32文字）
+	if len(c.JWT.AccessTokenSecret) < 32 {
+		return fmt.Errorf("JWT_ACCESS_TOKEN_SECRET must be at least 32 characters long")
+	}
+	if len(c.JWT.RefreshTokenSecret) < 32 {
+		return fmt.Errorf("JWT_REFRESH_TOKEN_SECRET must be at least 32 characters long")
+	}
+
+	// Issuerが空でないことを確認
+	if c.JWT.Issuer == "" {
+		return fmt.Errorf("JWT_ISSUER cannot be empty")
+	}
+
+	// Audienceが少なくとも1つの値を持つことを確認
+	if len(c.JWT.Audience) == 0 {
+		return fmt.Errorf("JWT_AUDIENCE must have at least one value")
 	}
 
 	return nil
@@ -140,6 +167,14 @@ func getDurationEnv(key string, defaultValue time.Duration) time.Duration {
 		if duration, err := time.ParseDuration(value); err == nil {
 			return duration
 		}
+	}
+	return defaultValue
+}
+
+// getSliceEnv 環境変数をスライスとして取得（カンマ区切り）
+func getSliceEnv(key string, defaultValue []string) []string {
+	if value, exists := os.LookupEnv(key); exists && value != "" {
+		return strings.Split(value, ",")
 	}
 	return defaultValue
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/aida0710/jwt-auth/internal/domain"
 	"github.com/aida0710/jwt-auth/internal/infrastructure/database"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -44,7 +45,7 @@ func (r *projectRepository) Create(ctx context.Context, project *domain.Project)
 }
 
 // GetByID IDでプロジェクトを取得
-func (r *projectRepository) GetByID(ctx context.Context, id string) (*domain.Project, error) {
+func (r *projectRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Project, error) {
 	var project domain.Project
 	query := `
 		SELECT id, account_id, name, description, status, created_at, updated_at
@@ -65,7 +66,7 @@ func (r *projectRepository) GetByID(ctx context.Context, id string) (*domain.Pro
 }
 
 // GetByAccountID アカウントIDでプロジェクトをページネーション付きで取得
-func (r *projectRepository) GetByAccountID(ctx context.Context, accountID string, limit, offset int) ([]*domain.Project, error) {
+func (r *projectRepository) GetByAccountID(ctx context.Context, accountID uuid.UUID, limit, offset int) ([]*domain.Project, error) {
 	projects := make([]*domain.Project, 0)
 	query := `
 		SELECT id, account_id, name, description, status, created_at, updated_at
@@ -132,7 +133,7 @@ func (r *projectRepository) Update(ctx context.Context, project *domain.Project)
 }
 
 // Delete プロジェクトを削除
-func (r *projectRepository) Delete(ctx context.Context, id string) error {
+func (r *projectRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	query := `DELETE FROM projects WHERE id = ?`
 
 	exec := database.GetExecutor(ctx, r.db)
@@ -154,7 +155,7 @@ func (r *projectRepository) Delete(ctx context.Context, id string) error {
 }
 
 // DeleteByAccountID アカウントIDですべてのプロジェクトを削除
-func (r *projectRepository) DeleteByAccountID(ctx context.Context, accountID string) error {
+func (r *projectRepository) DeleteByAccountID(ctx context.Context, accountID uuid.UUID) error {
 	query := `DELETE FROM projects WHERE account_id = ?`
 
 	exec := database.GetExecutor(ctx, r.db)
@@ -167,7 +168,7 @@ func (r *projectRepository) DeleteByAccountID(ctx context.Context, accountID str
 }
 
 // CountByAccountID アカウントIDでプロジェクト数をカウント
-func (r *projectRepository) CountByAccountID(ctx context.Context, accountID string) (int, error) {
+func (r *projectRepository) CountByAccountID(ctx context.Context, accountID uuid.UUID) (int, error) {
 	var count int
 	query := `SELECT COUNT(*) FROM projects WHERE account_id = ?`
 

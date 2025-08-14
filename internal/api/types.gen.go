@@ -9,6 +9,10 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+const (
+	BearerAuthScopes = "BearerAuth.Scopes"
+)
+
 // Defines values for CreateProjectRequestStatus.
 const (
 	CreateProjectRequestStatusActive   CreateProjectRequestStatus = "active"
@@ -47,6 +51,17 @@ type AccountListResponse struct {
 	Total    int       `json:"total"`
 }
 
+// AuthResponse defines model for AuthResponse.
+type AuthResponse struct {
+	AccessToken string  `json:"access_token"`
+	Account     Account `json:"account"`
+
+	// ExpiresIn Access token expiration time in seconds
+	ExpiresIn    int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+}
+
 // CreateAccountRequest defines model for CreateAccountRequest.
 type CreateAccountRequest struct {
 	Email openapi_types.Email `json:"email"`
@@ -66,6 +81,17 @@ type CreateProjectRequestStatus string
 // Error defines model for Error.
 type Error struct {
 	Error string `json:"error"`
+}
+
+// LoginRequest defines model for LoginRequest.
+type LoginRequest struct {
+	Email    openapi_types.Email `json:"email"`
+	Password string              `json:"password"`
+}
+
+// LogoutRequest defines model for LogoutRequest.
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token"`
 }
 
 // Project defines model for Project.
@@ -88,6 +114,18 @@ type ProjectListResponse struct {
 	Offset   int       `json:"offset"`
 	Projects []Project `json:"projects"`
 	Total    int       `json:"total"`
+}
+
+// RefreshTokenRequest defines model for RefreshTokenRequest.
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+// SignUpRequest defines model for SignUpRequest.
+type SignUpRequest struct {
+	Email    openapi_types.Email `json:"email"`
+	Name     string              `json:"name"`
+	Password string              `json:"password"`
 }
 
 // UpdateAccountRequest defines model for UpdateAccountRequest.
@@ -124,6 +162,9 @@ type InternalServerError = Error
 // NotFound defines model for NotFound.
 type NotFound = Error
 
+// Unauthorized defines model for Unauthorized.
+type Unauthorized = Error
+
 // ListAccountsParams defines parameters for ListAccounts.
 type ListAccountsParams struct {
 	// Limit Number of items to return
@@ -153,3 +194,15 @@ type CreateProjectJSONRequestBody = CreateProjectRequest
 
 // UpdateProjectJSONRequestBody defines body for UpdateProject for application/json ContentType.
 type UpdateProjectJSONRequestBody = UpdateProjectRequest
+
+// LoginJSONRequestBody defines body for Login for application/json ContentType.
+type LoginJSONRequestBody = LoginRequest
+
+// LogoutJSONRequestBody defines body for Logout for application/json ContentType.
+type LogoutJSONRequestBody = LogoutRequest
+
+// RefreshTokenJSONRequestBody defines body for RefreshToken for application/json ContentType.
+type RefreshTokenJSONRequestBody = RefreshTokenRequest
+
+// SignUpJSONRequestBody defines body for SignUp for application/json ContentType.
+type SignUpJSONRequestBody = SignUpRequest

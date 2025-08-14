@@ -3,15 +3,30 @@ package domain
 import (
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Account アカウントエンティティ
 type Account struct {
-	ID        string    `db:"id" json:"id"`
-	Email     string    `db:"email" json:"email"`
-	Name      string    `db:"name" json:"name"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+	ID           uuid.UUID `db:"id" json:"id"`
+	Email        string    `db:"email" json:"email"`
+	Name         string    `db:"name" json:"name"`
+	PasswordHash string    `db:"password_hash" json:"-"` // JSONレスポンスには含めない
+	CreatedAt    time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
+}
+
+// NewAccount 新しいAccountを作成（UUID v7を使用）
+func NewAccount(email, name, passwordHash string) *Account {
+	return &Account{
+		ID:           uuid.Must(uuid.NewV7()), // UUID v7を使用
+		Email:        email,
+		Name:         name,
+		PasswordHash: passwordHash,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
 }
 
 // Validate アカウントエンティティを検証

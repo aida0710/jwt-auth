@@ -43,6 +43,18 @@ type ServerInterface interface {
 	// Update a project
 	// (PUT /accounts/{account_id}/projects/{project_id})
 	UpdateProject(ctx echo.Context, accountId AccountID, projectId ProjectID) error
+	// Login with email and password
+	// (POST /auth/login)
+	Login(ctx echo.Context) error
+	// Logout and revoke refresh token
+	// (POST /auth/logout)
+	Logout(ctx echo.Context) error
+	// Refresh access token using refresh token
+	// (POST /auth/refresh)
+	RefreshToken(ctx echo.Context) error
+	// Sign up a new account
+	// (POST /auth/signup)
+	SignUp(ctx echo.Context) error
 	// Health check
 	// (GET /health)
 	GetHealth(ctx echo.Context) error
@@ -56,6 +68,8 @@ type ServerInterfaceWrapper struct {
 // ListAccounts converts echo context to params.
 func (w *ServerInterfaceWrapper) ListAccounts(ctx echo.Context) error {
 	var err error
+
+	ctx.Set(BearerAuthScopes, []string{})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListAccountsParams
@@ -82,6 +96,8 @@ func (w *ServerInterfaceWrapper) ListAccounts(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) CreateAccount(ctx echo.Context) error {
 	var err error
 
+	ctx.Set(BearerAuthScopes, []string{})
+
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.CreateAccount(ctx)
 	return err
@@ -97,6 +113,8 @@ func (w *ServerInterfaceWrapper) DeleteAccount(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter account_id: %s", err))
 	}
+
+	ctx.Set(BearerAuthScopes, []string{})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.DeleteAccount(ctx, accountId)
@@ -114,6 +132,8 @@ func (w *ServerInterfaceWrapper) GetAccount(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter account_id: %s", err))
 	}
 
+	ctx.Set(BearerAuthScopes, []string{})
+
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetAccount(ctx, accountId)
 	return err
@@ -130,6 +150,8 @@ func (w *ServerInterfaceWrapper) UpdateAccount(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter account_id: %s", err))
 	}
 
+	ctx.Set(BearerAuthScopes, []string{})
+
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.UpdateAccount(ctx, accountId)
 	return err
@@ -145,6 +167,8 @@ func (w *ServerInterfaceWrapper) ListProjects(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter account_id: %s", err))
 	}
+
+	ctx.Set(BearerAuthScopes, []string{})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListProjectsParams
@@ -178,6 +202,8 @@ func (w *ServerInterfaceWrapper) CreateProject(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter account_id: %s", err))
 	}
 
+	ctx.Set(BearerAuthScopes, []string{})
+
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.CreateProject(ctx, accountId)
 	return err
@@ -201,6 +227,8 @@ func (w *ServerInterfaceWrapper) DeleteProject(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter project_id: %s", err))
 	}
+
+	ctx.Set(BearerAuthScopes, []string{})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.DeleteProject(ctx, accountId, projectId)
@@ -226,6 +254,8 @@ func (w *ServerInterfaceWrapper) GetProject(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter project_id: %s", err))
 	}
 
+	ctx.Set(BearerAuthScopes, []string{})
+
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetProject(ctx, accountId, projectId)
 	return err
@@ -250,8 +280,48 @@ func (w *ServerInterfaceWrapper) UpdateProject(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter project_id: %s", err))
 	}
 
+	ctx.Set(BearerAuthScopes, []string{})
+
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.UpdateProject(ctx, accountId, projectId)
+	return err
+}
+
+// Login converts echo context to params.
+func (w *ServerInterfaceWrapper) Login(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.Login(ctx)
+	return err
+}
+
+// Logout converts echo context to params.
+func (w *ServerInterfaceWrapper) Logout(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.Logout(ctx)
+	return err
+}
+
+// RefreshToken converts echo context to params.
+func (w *ServerInterfaceWrapper) RefreshToken(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.RefreshToken(ctx)
+	return err
+}
+
+// SignUp converts echo context to params.
+func (w *ServerInterfaceWrapper) SignUp(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.SignUp(ctx)
 	return err
 }
 
@@ -302,6 +372,10 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.DELETE(baseURL+"/accounts/:account_id/projects/:project_id", wrapper.DeleteProject)
 	router.GET(baseURL+"/accounts/:account_id/projects/:project_id", wrapper.GetProject)
 	router.PUT(baseURL+"/accounts/:account_id/projects/:project_id", wrapper.UpdateProject)
+	router.POST(baseURL+"/auth/login", wrapper.Login)
+	router.POST(baseURL+"/auth/logout", wrapper.Logout)
+	router.POST(baseURL+"/auth/refresh", wrapper.RefreshToken)
+	router.POST(baseURL+"/auth/signup", wrapper.SignUp)
 	router.GET(baseURL+"/health", wrapper.GetHealth)
 
 }
