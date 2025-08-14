@@ -27,53 +27,30 @@ func NewAPIAccountFromEntity(account *domain.Account) api.Account {
 	}
 }
 
-// NewAccountListResponse アカウント一覧レスポンスを生成
-func NewAccountListResponse(accounts []*domain.Account, total, limit, offset int) api.AccountListResponse {
-	apiAccounts := make([]api.Account, len(accounts))
-	for i, account := range accounts {
-		apiAccounts[i] = NewAPIAccountFromEntity(account)
-	}
-
-	return api.AccountListResponse{
-		Accounts: apiAccounts,
-		Total:    total,
-		Limit:    limit,
-		Offset:   offset,
-	}
-}
-
 // ====================================
 // アカウント関連のハンドラー実装
 // ====================================
 
 // ListAccounts アカウント一覧を取得
-func (s *Server) ListAccounts(ctx echo.Context, params api.ListAccountsParams) error {
+func (s *Server) ListAccounts(ctx echo.Context) error {
 	reqCtx := ctx.Request().Context()
 
-	// デフォルト値の設定
-	limit := 10
-	offset := 0
+	s.logger.Info(reqCtx, "Getting accounts list")
 
-	if params.Limit != nil && *params.Limit > 0 {
-		limit = *params.Limit
-	}
-	if params.Offset != nil && *params.Offset >= 0 {
-		offset = *params.Offset
-	}
-
-	s.logger.Info(reqCtx, "Getting accounts list",
-		logger.F("limit", limit),
-		logger.F("offset", offset),
-	)
-
-	accounts, total, err := s.accountUsecase.List(reqCtx, limit, offset)
+	// すべてのアカウントを取得
+	accounts, err := s.accountUsecase.List(reqCtx)
 	if err != nil {
 		s.logger.Error(reqCtx, "Failed to get accounts", err)
 		return handleAccountError(ctx, err)
 	}
 
-	response := NewAccountListResponse(accounts, total, limit, offset)
-	return ctx.JSON(http.StatusOK, response)
+	// エンティティからAPIレスポンスに変換
+	apiAccounts := make([]api.Account, len(accounts))
+	for i, account := range accounts {
+		apiAccounts[i] = NewAPIAccountFromEntity(account)
+	}
+
+	return ctx.JSON(http.StatusOK, apiAccounts)
 }
 
 // GetAccount IDでアカウントを取得

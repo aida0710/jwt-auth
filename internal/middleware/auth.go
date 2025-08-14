@@ -8,6 +8,7 @@ import (
 
 	"github.com/aida0710/jwt-auth/internal/auth"
 	"github.com/aida0710/jwt-auth/internal/domain"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -138,7 +139,7 @@ func logSuspiciousTokenAttempt(ctx context.Context, repo domain.SecurityAuditLog
 
 	// accountIDがない場合は"UNKNOWN"を使用
 	auditLog, err := domain.NewSecurityAuditLog(
-		"UNKNOWN", // トークンが無効なためアカウントIDが不明
+		uuid.Nil, // トークンが無効なためアカウントIDが不明
 		eventType,
 		description,
 		ipAddressPtr,

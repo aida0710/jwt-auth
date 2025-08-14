@@ -98,7 +98,7 @@ func (r *accountRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.
 	err := exec.GetContext(ctx, &dbAccount, query, id.String())
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
+			return nil, domain.ErrNotFound
 		}
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (r *accountRepository) GetByEmail(ctx context.Context, email string) (*doma
 	err := exec.GetContext(ctx, &dbAccount, query, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
+			return nil, domain.ErrNotFound
 		}
 		return nil, err
 	}
@@ -127,18 +127,17 @@ func (r *accountRepository) GetByEmail(ctx context.Context, email string) (*doma
 	return dbAccount.toDomain()
 }
 
-// List ページネーション付きでアカウント一覧を取得
-func (r *accountRepository) List(ctx context.Context, limit, offset int) ([]*domain.Account, error) {
+// List アカウント一覧を取得
+func (r *accountRepository) List(ctx context.Context) ([]*domain.Account, error) {
 	dbAccounts := make([]accountDB, 0)
 	query := `
 		SELECT id, email, name, password_hash, created_at, updated_at
 		FROM accounts
 		ORDER BY created_at DESC
-		LIMIT ? OFFSET ?
 	`
 
 	exec := database.GetExecutor(ctx, r.db)
-	err := exec.SelectContext(ctx, &dbAccounts, query, limit, offset)
+	err := exec.SelectContext(ctx, &dbAccounts, query)
 	if err != nil {
 		return nil, err
 	}
@@ -204,18 +203,4 @@ func (r *accountRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 
 	return nil
-}
-
-// Count アカウントの総数をカウント
-func (r *accountRepository) Count(ctx context.Context) (int, error) {
-	var count int
-	query := `SELECT COUNT(*) FROM accounts`
-
-	exec := database.GetExecutor(ctx, r.db)
-	err := exec.GetContext(ctx, &count, query)
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
 }

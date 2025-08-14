@@ -65,19 +65,18 @@ func (r *projectRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.
 	return &project, nil
 }
 
-// GetByAccountID アカウントIDでプロジェクトをページネーション付きで取得
-func (r *projectRepository) GetByAccountID(ctx context.Context, accountID uuid.UUID, limit, offset int) ([]*domain.Project, error) {
+// GetByAccountID アカウントIDでプロジェクトを取得
+func (r *projectRepository) GetByAccountID(ctx context.Context, accountID uuid.UUID) ([]*domain.Project, error) {
 	projects := make([]*domain.Project, 0)
 	query := `
 		SELECT id, account_id, name, description, status, created_at, updated_at
 		FROM projects
 		WHERE account_id = ?
 		ORDER BY created_at DESC
-		LIMIT ? OFFSET ?
 	`
 
 	exec := database.GetExecutor(ctx, r.db)
-	err := exec.SelectContext(ctx, &projects, query, accountID, limit, offset)
+	err := exec.SelectContext(ctx, &projects, query, accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -85,18 +84,17 @@ func (r *projectRepository) GetByAccountID(ctx context.Context, accountID uuid.U
 	return projects, nil
 }
 
-// List すべてのプロジェクトをページネーション付きで取得
-func (r *projectRepository) List(ctx context.Context, limit, offset int) ([]*domain.Project, error) {
+// List すべてのプロジェクトを取得
+func (r *projectRepository) List(ctx context.Context) ([]*domain.Project, error) {
 	projects := make([]*domain.Project, 0)
 	query := `
 		SELECT id, account_id, name, description, status, created_at, updated_at
 		FROM projects
 		ORDER BY created_at DESC
-		LIMIT ? OFFSET ?
 	`
 
 	exec := database.GetExecutor(ctx, r.db)
-	err := exec.SelectContext(ctx, &projects, query, limit, offset)
+	err := exec.SelectContext(ctx, &projects, query)
 	if err != nil {
 		return nil, err
 	}
@@ -165,32 +163,4 @@ func (r *projectRepository) DeleteByAccountID(ctx context.Context, accountID uui
 	}
 
 	return nil
-}
-
-// CountByAccountID アカウントIDでプロジェクト数をカウント
-func (r *projectRepository) CountByAccountID(ctx context.Context, accountID uuid.UUID) (int, error) {
-	var count int
-	query := `SELECT COUNT(*) FROM projects WHERE account_id = ?`
-
-	exec := database.GetExecutor(ctx, r.db)
-	err := exec.GetContext(ctx, &count, query, accountID)
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
-}
-
-// Count プロジェクトの総数をカウント
-func (r *projectRepository) Count(ctx context.Context) (int, error) {
-	var count int
-	query := `SELECT COUNT(*) FROM projects`
-
-	exec := database.GetExecutor(ctx, r.db)
-	err := exec.GetContext(ctx, &count, query)
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
 }

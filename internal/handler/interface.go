@@ -15,7 +15,7 @@ type Handler interface {
 // AccountHandler アカウント関連のハンドラーインターフェース
 type AccountHandler interface {
 	// ListAccounts アカウント一覧取得
-	ListAccounts(ctx echo.Context, params api.ListAccountsParams) error
+	ListAccounts(ctx echo.Context, params []api.Account) error
 	// CreateAccount アカウント作成
 	CreateAccount(ctx echo.Context) error
 	// GetAccount アカウント取得
@@ -29,7 +29,7 @@ type AccountHandler interface {
 // ProjectHandler プロジェクト関連のハンドラーインターフェース
 type ProjectHandler interface {
 	// ListProjects プロジェクト一覧取得
-	ListProjects(ctx echo.Context, accountId api.AccountID, params api.ListProjectsParams) error
+	ListProjects(ctx echo.Context, accountId api.AccountID, params []api.Project) error
 	// CreateProject プロジェクト作成
 	CreateProject(ctx echo.Context, accountId api.AccountID) error
 	// GetProject プロジェクト取得

@@ -53,11 +53,12 @@ func (u *projectUsecase) Create(ctx context.Context, accountID uuid.UUID, input 
 		return nil, domain.ErrAccountNotFound
 	}
 
-	count, err := u.projectRepo.CountByAccountID(ctx, accountID)
+	// プロジェクト数の制限をチェック
+	projects, err := u.projectRepo.GetByAccountID(ctx, accountID)
 	if err != nil {
 		return nil, err
 	}
-	if count >= domain.MaxProjectsPerAccount {
+	if len(projects) >= domain.MaxProjectsPerAccount {
 		return nil, domain.ErrProjectLimitExceeded
 	}
 
@@ -113,35 +114,22 @@ func (u *projectUsecase) GetByID(ctx context.Context, accountID, projectID uuid.
 	return project, nil
 }
 
-// ListByAccountID アカウントIDでプロジェクト一覧をページネーション付きで取得
-func (u *projectUsecase) ListByAccountID(ctx context.Context, accountID uuid.UUID, limit, offset int) ([]*domain.Project, int, error) {
-	// Verify account exists
+// ListByAccountID アカウントIDでプロジェクト一覧を取得
+func (u *projectUsecase) ListByAccountID(ctx context.Context, accountID uuid.UUID) ([]*domain.Project, error) {
 	account, err := u.accountRepo.GetByID(ctx, accountID)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	if account == nil {
-		return nil, 0, domain.ErrAccountNotFound
+		return nil, domain.ErrAccountNotFound
 	}
 
-	if limit <= 0 {
-		limit = 10
-	}
-	if offset < 0 {
-		offset = 0
-	}
-
-	projects, err := u.projectRepo.GetByAccountID(ctx, accountID, limit, offset)
+	projects, err := u.projectRepo.GetByAccountID(ctx, accountID)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	total, err := u.projectRepo.CountByAccountID(ctx, accountID)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return projects, total, nil
+	return projects, nil
 }
 
 // Update プロジェクトを更新

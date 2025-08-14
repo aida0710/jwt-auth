@@ -79,8 +79,8 @@ func LoadConfig() (*Config, error) {
 			ConnMaxLifetime: getDurationEnv("DB_CONN_MAX_LIFETIME", 5*time.Minute),
 		},
 		JWT: JWTConfig{
-			AccessTokenSecret:  getEnv("JWT_ACCESS_TOKEN_SECRET", getEnv("JWT_SECRET", "your-access-token-secret-change-this-in-production")),
-			RefreshTokenSecret: getEnv("JWT_REFRESH_TOKEN_SECRET", getEnv("JWT_SECRET", "your-refresh-token-secret-change-this-in-production")),
+			AccessTokenSecret:  getEnv("JWT_ACCESS_TOKEN_SECRET", getEnv("JWT_SECRET", "secret")),
+			RefreshTokenSecret: getEnv("JWT_REFRESH_TOKEN_SECRET", getEnv("JWT_SECRET", "secret")),
 			AccessTokenExpiry:  getDurationEnv("JWT_ACCESS_TOKEN_EXPIRY", 1*time.Hour),
 			RefreshTokenExpiry: getDurationEnv("JWT_REFRESH_TOKEN_EXPIRY", 30*24*time.Hour),
 			Issuer:             getEnv("JWT_ISSUER", "jwt-auth-api"),
@@ -104,12 +104,6 @@ func LoadConfig() (*Config, error) {
 func (c *Config) Validate() error {
 	if c.Database.Password == "" && c.Env == "production" {
 		return fmt.Errorf("DB_PASSWORD is required in production environment")
-	}
-
-	if (c.JWT.AccessTokenSecret == "your-access-token-secret-change-this-in-production" ||
-		c.JWT.RefreshTokenSecret == "your-refresh-token-secret-change-this-in-production") &&
-		c.Env == "production" {
-		return fmt.Errorf("JWT secrets must be changed in production environment")
 	}
 
 	// JWT秘密鍵の長さをチェック（最小32文字）

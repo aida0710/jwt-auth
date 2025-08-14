@@ -45,47 +45,19 @@ func NewAPIProjectFromEntity(project *domain.Project) api.Project {
 	return apiProject
 }
 
-// NewProjectListResponse プロジェクト一覧レスポンスを生成
-func NewProjectListResponse(projects []*domain.Project, total, limit, offset int) api.ProjectListResponse {
-	apiProjects := make([]api.Project, len(projects))
-	for i, project := range projects {
-		apiProjects[i] = NewAPIProjectFromEntity(project)
-	}
-
-	return api.ProjectListResponse{
-		Projects: apiProjects,
-		Total:    total,
-		Limit:    limit,
-		Offset:   offset,
-	}
-}
-
 // ====================================
 // プロジェクト関連のハンドラー実装
 // ====================================
 
 // ListProjects アカウントのプロジェクト一覧を取得
-func (s *Server) ListProjects(ctx echo.Context, accountId api.AccountID, params api.ListProjectsParams) error {
+func (s *Server) ListProjects(ctx echo.Context, accountId api.AccountID) error {
 	reqCtx := ctx.Request().Context()
-
-	// デフォルト値の設定
-	limit := 10
-	offset := 0
-
-	if params.Limit != nil && *params.Limit > 0 {
-		limit = *params.Limit
-	}
-	if params.Offset != nil && *params.Offset >= 0 {
-		offset = *params.Offset
-	}
 
 	s.logger.Info(reqCtx, "Getting projects for account",
 		logger.F("account_id", accountId),
-		logger.F("limit", limit),
-		logger.F("offset", offset),
 	)
 
-	projects, total, err := s.projectUsecase.ListByAccountID(reqCtx, accountId, limit, offset)
+	projects, err := s.projectUsecase.ListByAccountID(reqCtx, accountId)
 	if err != nil {
 		s.logger.Error(reqCtx, "Failed to get projects", err,
 			logger.F("account_id", accountId),
@@ -93,8 +65,13 @@ func (s *Server) ListProjects(ctx echo.Context, accountId api.AccountID, params 
 		return handleProjectError(ctx, err)
 	}
 
-	response := NewProjectListResponse(projects, total, limit, offset)
-	return ctx.JSON(http.StatusOK, response)
+	// エンティティからAPIレスポンスに変換
+	apiProjects := make([]api.Project, len(projects))
+	for i, project := range projects {
+		apiProjects[i] = NewAPIProjectFromEntity(project)
+	}
+
+	return ctx.JSON(http.StatusOK, apiProjects)
 }
 
 // CreateProject 新しいプロジェクトを作成

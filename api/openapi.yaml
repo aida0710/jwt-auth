@@ -145,29 +145,15 @@ paths:
         - Accounts
       security:
         - BearerAuth: []
-      parameters:
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            default: 10
-            minimum: 1
-            maximum: 100
-          description: Number of items to return
-        - in: query
-          name: offset
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-          description: Number of items to skip
       responses:
         '200':
           description: List of accounts
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountListResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -280,28 +266,15 @@ paths:
         - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/AccountID'
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            default: 10
-            minimum: 1
-            maximum: 100
-          description: Number of items to return
-        - in: query
-          name: offset
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-          description: Number of items to skip
       responses:
         '200':
           description: List of projects
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProjectListResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -443,28 +416,6 @@ components:
           type: string
           example: John Doe
 
-    AccountListResponse:
-      type: object
-      properties:
-        accounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/Account'
-        total:
-          type: integer
-          example: 100
-        limit:
-          type: integer
-          example: 10
-        offset:
-          type: integer
-          example: 0
-      required:
-        - accounts
-        - total
-        - limit
-        - offset
-
     Project:
       type: object
       properties:
@@ -529,28 +480,6 @@ components:
           type: string
           enum: [active, inactive, archived]
           example: active
-
-    ProjectListResponse:
-      type: object
-      properties:
-        projects:
-          type: array
-          items:
-            $ref: '#/components/schemas/Project'
-        total:
-          type: integer
-          example: 50
-        limit:
-          type: integer
-          example: 10
-        offset:
-          type: integer
-          example: 0
-      required:
-        - projects
-        - total
-        - limit
-        - offset
 
     Error:
       type: object

@@ -100,26 +100,14 @@ func (u *accountUsecase) GetByEmail(ctx context.Context, email string) (*domain.
 	return account, nil
 }
 
-// List ページネーション付きでアカウント一覧を取得
-func (u *accountUsecase) List(ctx context.Context, limit, offset int) ([]*domain.Account, int, error) {
-	if limit <= 0 {
-		limit = 10
-	}
-	if offset < 0 {
-		offset = 0
-	}
-
-	accounts, err := u.accountRepo.List(ctx, limit, offset)
+// List アカウント一覧を取得
+func (u *accountUsecase) List(ctx context.Context) ([]*domain.Account, error) {
+	accounts, err := u.accountRepo.List(ctx)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	total, err := u.accountRepo.Count(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return accounts, total, nil
+	return accounts, nil
 }
 
 // Update アカウントを更新

@@ -11,23 +11,20 @@ type AccountRepository interface {
 	Create(ctx context.Context, account *Account) error
 	GetByID(ctx context.Context, id uuid.UUID) (*Account, error)
 	GetByEmail(ctx context.Context, email string) (*Account, error)
-	List(ctx context.Context, limit, offset int) ([]*Account, error)
+	List(ctx context.Context) ([]*Account, error)
 	Update(ctx context.Context, account *Account) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	Count(ctx context.Context) (int, error)
 }
 
 // ProjectRepository プロジェクトリポジトリのインターフェースを定義
 type ProjectRepository interface {
 	Create(ctx context.Context, project *Project) error
 	GetByID(ctx context.Context, id uuid.UUID) (*Project, error)
-	GetByAccountID(ctx context.Context, accountID uuid.UUID, limit, offset int) ([]*Project, error)
-	List(ctx context.Context, limit, offset int) ([]*Project, error)
+	GetByAccountID(ctx context.Context, accountID uuid.UUID) ([]*Project, error)
+	List(ctx context.Context) ([]*Project, error)
 	Update(ctx context.Context, project *Project) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteByAccountID(ctx context.Context, accountID uuid.UUID) error
-	CountByAccountID(ctx context.Context, accountID uuid.UUID) (int, error)
-	Count(ctx context.Context) (int, error)
 }
 
 // RefreshTokenRepository リフレッシュトークンリポジトリのインターフェースを定義

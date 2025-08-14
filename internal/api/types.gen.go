@@ -43,14 +43,6 @@ type Account struct {
 	UpdatedAt time.Time           `json:"updated_at"`
 }
 
-// AccountListResponse defines model for AccountListResponse.
-type AccountListResponse struct {
-	Accounts []Account `json:"accounts"`
-	Limit    int       `json:"limit"`
-	Offset   int       `json:"offset"`
-	Total    int       `json:"total"`
-}
-
 // AuthResponse defines model for AuthResponse.
 type AuthResponse struct {
 	AccessToken string  `json:"access_token"`
@@ -60,12 +52,6 @@ type AuthResponse struct {
 	ExpiresIn    int    `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
 	TokenType    string `json:"token_type"`
-}
-
-// CreateAccountRequest defines model for CreateAccountRequest.
-type CreateAccountRequest struct {
-	Email openapi_types.Email `json:"email"`
-	Name  string              `json:"name"`
 }
 
 // CreateProjectRequest defines model for CreateProjectRequest.
@@ -107,14 +93,6 @@ type Project struct {
 
 // ProjectStatus defines model for Project.Status.
 type ProjectStatus string
-
-// ProjectListResponse defines model for ProjectListResponse.
-type ProjectListResponse struct {
-	Limit    int       `json:"limit"`
-	Offset   int       `json:"offset"`
-	Projects []Project `json:"projects"`
-	Total    int       `json:"total"`
-}
 
 // RefreshTokenRequest defines model for RefreshTokenRequest.
 type RefreshTokenRequest struct {
@@ -164,27 +142,6 @@ type NotFound = Error
 
 // Unauthorized defines model for Unauthorized.
 type Unauthorized = Error
-
-// ListAccountsParams defines parameters for ListAccounts.
-type ListAccountsParams struct {
-	// Limit Number of items to return
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
-
-	// Offset Number of items to skip
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
-}
-
-// ListProjectsParams defines parameters for ListProjects.
-type ListProjectsParams struct {
-	// Limit Number of items to return
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
-
-	// Offset Number of items to skip
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
-}
-
-// CreateAccountJSONRequestBody defines body for CreateAccount for application/json ContentType.
-type CreateAccountJSONRequestBody = CreateAccountRequest
 
 // UpdateAccountJSONRequestBody defines body for UpdateAccount for application/json ContentType.
 type UpdateAccountJSONRequestBody = UpdateAccountRequest

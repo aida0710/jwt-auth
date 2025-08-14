@@ -15,10 +15,7 @@ import (
 type ServerInterface interface {
 	// List accounts
 	// (GET /accounts)
-	ListAccounts(ctx echo.Context, params ListAccountsParams) error
-	// Create a new account
-	// (POST /accounts)
-	CreateAccount(ctx echo.Context) error
+	ListAccounts(ctx echo.Context) error
 	// Delete an account
 	// (DELETE /accounts/{account_id})
 	DeleteAccount(ctx echo.Context, accountId AccountID) error
@@ -30,7 +27,7 @@ type ServerInterface interface {
 	UpdateAccount(ctx echo.Context, accountId AccountID) error
 	// List projects for an account
 	// (GET /accounts/{account_id}/projects)
-	ListProjects(ctx echo.Context, accountId AccountID, params ListProjectsParams) error
+	ListProjects(ctx echo.Context, accountId AccountID) error
 	// Create a new project
 	// (POST /accounts/{account_id}/projects)
 	CreateProject(ctx echo.Context, accountId AccountID) error
@@ -71,35 +68,8 @@ func (w *ServerInterfaceWrapper) ListAccounts(ctx echo.Context) error {
 
 	ctx.Set(BearerAuthScopes, []string{})
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params ListAccountsParams
-	// ------------- Optional query parameter "limit" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "limit", ctx.QueryParams(), &params.Limit)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter limit: %s", err))
-	}
-
-	// ------------- Optional query parameter "offset" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "offset", ctx.QueryParams(), &params.Offset)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter offset: %s", err))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.ListAccounts(ctx, params)
-	return err
-}
-
-// CreateAccount converts echo context to params.
-func (w *ServerInterfaceWrapper) CreateAccount(ctx echo.Context) error {
-	var err error
-
-	ctx.Set(BearerAuthScopes, []string{})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.CreateAccount(ctx)
+	err = w.Handler.ListAccounts(ctx)
 	return err
 }
 
@@ -170,24 +140,8 @@ func (w *ServerInterfaceWrapper) ListProjects(ctx echo.Context) error {
 
 	ctx.Set(BearerAuthScopes, []string{})
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params ListProjectsParams
-	// ------------- Optional query parameter "limit" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "limit", ctx.QueryParams(), &params.Limit)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter limit: %s", err))
-	}
-
-	// ------------- Optional query parameter "offset" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "offset", ctx.QueryParams(), &params.Offset)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter offset: %s", err))
-	}
-
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.ListProjects(ctx, accountId, params)
+	err = w.Handler.ListProjects(ctx, accountId)
 	return err
 }
 
@@ -363,7 +317,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/accounts", wrapper.ListAccounts)
-	router.POST(baseURL+"/accounts", wrapper.CreateAccount)
 	router.DELETE(baseURL+"/accounts/:account_id", wrapper.DeleteAccount)
 	router.GET(baseURL+"/accounts/:account_id", wrapper.GetAccount)
 	router.PUT(baseURL+"/accounts/:account_id", wrapper.UpdateAccount)
