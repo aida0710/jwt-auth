@@ -51,7 +51,7 @@ func NewAuthMiddleware(config AuthConfig) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid authorization header format")
 			}
 
-			fmt.Println(tokenParts[1])
+			// fmt.Println(tokenParts[1])
 
 			tokenString := tokenParts[1]
 
