@@ -74,7 +74,7 @@ func (u *AuthUsecase) SignUp(ctx context.Context, input SignUpInput) (*AuthToken
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// NewAccountを使用してUUID v7で作成
+	// NewAccountを使用してUUID v4で作成
 	account := domain.NewAccount(input.Email, input.Name, passwordHash)
 
 	// アカウントを検証

@@ -1,7 +1,7 @@
 -- refresh_tokensテーブルの作成
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-    id VARCHAR(36) PRIMARY KEY,
-    account_id VARCHAR(36) NOT NULL,
+    id VARCHAR(36) PRIMARY KEY, -- UUID v4
+    account_id VARCHAR(36) NOT NULL, -- UUID v4
     token_hash VARCHAR(255) NOT NULL UNIQUE,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -16,9 +16,10 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     INDEX idx_revoked_at (revoked_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- security_audit_logsテーブルの作成
 CREATE TABLE IF NOT EXISTS security_audit_logs (
-    id VARCHAR(36) PRIMARY KEY,
-    account_id VARCHAR(36) NOT NULL,
+    id VARCHAR(36) PRIMARY KEY, -- UUID v4
+    account_id VARCHAR(36) NOT NULL, -- UUID v4
     event_type VARCHAR(100) NOT NULL,
     event_description TEXT,
     ip_address VARCHAR(45),

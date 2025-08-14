@@ -2,14 +2,12 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/aida0710/jwt-auth/internal/api"
 	"github.com/aida0710/jwt-auth/internal/domain"
 	"github.com/aida0710/jwt-auth/internal/logger"
 	"github.com/aida0710/jwt-auth/internal/usecase"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -18,21 +16,10 @@ import (
 // ====================================
 
 // NewAPIProjectFromEntity エンティティからAPIレスポンスに変換
-func NewAPIProjectFromEntity(project *domain.Project) (api.Project, error) {
-	// UUIDのパース（バリデーション済みのはずだが、念のため確認）
-	projectId, err := uuid.Parse(project.ID)
-	if err != nil {
-		return api.Project{}, fmt.Errorf("failed to parse project ID: %w", err)
-	}
-
-	accountId, err := uuid.Parse(project.AccountID)
-	if err != nil {
-		return api.Project{}, fmt.Errorf("failed to parse account ID: %w", err)
-	}
-
+func NewAPIProjectFromEntity(project *domain.Project) api.Project {
 	apiProject := api.Project{
-		Id:        projectId,
-		AccountId: accountId,
+		Id:        project.ID,
+		AccountId: project.AccountID,
 		Name:      project.Name,
 		CreatedAt: project.CreatedAt,
 		UpdatedAt: project.UpdatedAt,
@@ -55,18 +42,14 @@ func NewAPIProjectFromEntity(project *domain.Project) (api.Project, error) {
 		apiProject.Status = api.ProjectStatusActive
 	}
 
-	return apiProject, nil
+	return apiProject
 }
 
 // NewProjectListResponse プロジェクト一覧レスポンスを生成
-func NewProjectListResponse(projects []*domain.Project, total, limit, offset int) (api.ProjectListResponse, error) {
+func NewProjectListResponse(projects []*domain.Project, total, limit, offset int) api.ProjectListResponse {
 	apiProjects := make([]api.Project, len(projects))
 	for i, project := range projects {
-		apiProject, err := NewAPIProjectFromEntity(project)
-		if err != nil {
-			return api.ProjectListResponse{}, fmt.Errorf("failed to convert project at index %d: %w", i, err)
-		}
-		apiProjects[i] = apiProject
+		apiProjects[i] = NewAPIProjectFromEntity(project)
 	}
 
 	return api.ProjectListResponse{
@@ -74,7 +57,7 @@ func NewProjectListResponse(projects []*domain.Project, total, limit, offset int
 		Total:    total,
 		Limit:    limit,
 		Offset:   offset,
-	}, nil
+	}
 }
 
 // ====================================
@@ -102,7 +85,7 @@ func (s *Server) ListProjects(ctx echo.Context, accountId api.AccountID, params 
 		logger.F("offset", offset),
 	)
 
-	projects, total, err := s.projectUsecase.ListByAccountID(reqCtx, accountId.String(), limit, offset)
+	projects, total, err := s.projectUsecase.ListByAccountID(reqCtx, accountId, limit, offset)
 	if err != nil {
 		s.logger.Error(reqCtx, "Failed to get projects", err,
 			logger.F("account_id", accountId),
@@ -110,13 +93,7 @@ func (s *Server) ListProjects(ctx echo.Context, accountId api.AccountID, params 
 		return handleProjectError(ctx, err)
 	}
 
-	response, err := NewProjectListResponse(projects, total, limit, offset)
-	if err != nil {
-		s.logger.Error(reqCtx, "Failed to convert projects to response", err)
-		return ctx.JSON(http.StatusInternalServerError, api.Error{
-			Error: "Internal server error",
-		})
-	}
+	response := NewProjectListResponse(projects, total, limit, offset)
 	return ctx.JSON(http.StatusOK, response)
 }
 
@@ -152,7 +129,7 @@ func (s *Server) CreateProject(ctx echo.Context, accountId api.AccountID) error 
 		input.Status = &status
 	}
 
-	project, err := s.projectUsecase.Create(reqCtx, accountId.String(), input)
+	project, err := s.projectUsecase.Create(reqCtx, accountId, input)
 	if err != nil {
 		s.logger.Error(reqCtx, "Failed to create project", err,
 			logger.F("account_id", accountId),
@@ -165,15 +142,7 @@ func (s *Server) CreateProject(ctx echo.Context, accountId api.AccountID) error 
 		logger.F("account_id", accountId),
 	)
 
-	apiProject, err := NewAPIProjectFromEntity(project)
-	if err != nil {
-		s.logger.Error(reqCtx, "Failed to convert project to response", err,
-			logger.F("project_id", project.ID),
-		)
-		return ctx.JSON(http.StatusInternalServerError, api.Error{
-			Error: "Internal server error",
-		})
-	}
+	apiProject := NewAPIProjectFromEntity(project)
 	return ctx.JSON(http.StatusCreated, apiProject)
 }
 
@@ -186,7 +155,7 @@ func (s *Server) GetProject(ctx echo.Context, accountId api.AccountID, projectId
 		logger.F("project_id", projectId),
 	)
 
-	project, err := s.projectUsecase.GetByID(reqCtx, accountId.String(), projectId.String())
+	project, err := s.projectUsecase.GetByID(reqCtx, accountId, projectId)
 	if err != nil {
 		s.logger.Error(reqCtx, "Failed to get project", err,
 			logger.F("account_id", accountId),
@@ -195,15 +164,7 @@ func (s *Server) GetProject(ctx echo.Context, accountId api.AccountID, projectId
 		return handleProjectError(ctx, err)
 	}
 
-	apiProject, err := NewAPIProjectFromEntity(project)
-	if err != nil {
-		s.logger.Error(reqCtx, "Failed to convert project to response", err,
-			logger.F("project_id", project.ID),
-		)
-		return ctx.JSON(http.StatusInternalServerError, api.Error{
-			Error: "Internal server error",
-		})
-	}
+	apiProject := NewAPIProjectFromEntity(project)
 	return ctx.JSON(http.StatusOK, apiProject)
 }
 
@@ -234,7 +195,7 @@ func (s *Server) UpdateProject(ctx echo.Context, accountId api.AccountID, projec
 		input.Status = &status
 	}
 
-	project, err := s.projectUsecase.Update(reqCtx, accountId.String(), projectId.String(), input)
+	project, err := s.projectUsecase.Update(reqCtx, accountId, projectId, input)
 	if err != nil {
 		s.logger.Error(reqCtx, "Failed to update project", err,
 			logger.F("account_id", accountId),
@@ -248,15 +209,7 @@ func (s *Server) UpdateProject(ctx echo.Context, accountId api.AccountID, projec
 		logger.F("project_id", projectId),
 	)
 
-	apiProject, err := NewAPIProjectFromEntity(project)
-	if err != nil {
-		s.logger.Error(reqCtx, "Failed to convert project to response", err,
-			logger.F("project_id", project.ID),
-		)
-		return ctx.JSON(http.StatusInternalServerError, api.Error{
-			Error: "Internal server error",
-		})
-	}
+	apiProject := NewAPIProjectFromEntity(project)
 	return ctx.JSON(http.StatusOK, apiProject)
 }
 
@@ -269,7 +222,7 @@ func (s *Server) DeleteProject(ctx echo.Context, accountId api.AccountID, projec
 		logger.F("project_id", projectId),
 	)
 
-	err := s.projectUsecase.Delete(reqCtx, accountId.String(), projectId.String())
+	err := s.projectUsecase.Delete(reqCtx, accountId, projectId)
 	if err != nil {
 		s.logger.Error(reqCtx, "Failed to delete project", err,
 			logger.F("account_id", accountId),

@@ -29,7 +29,7 @@ type Project struct {
 // NewProject 新しいProjectを作成
 func NewProject(accountID uuid.UUID, name, description string) *Project {
 	return &Project{
-		ID:          uuid.Must(uuid.NewV7()), // UUID v7を使用
+		ID:          uuid.New(),
 		AccountID:   accountID,
 		Name:        name,
 		Description: description,

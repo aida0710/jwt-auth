@@ -6,7 +6,9 @@ import (
 
 // HashPassword パスワードをハッシュ化します
 func HashPassword(password string) (string, error) {
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	// bcrypt cost は
+	//hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return "", err
 	}

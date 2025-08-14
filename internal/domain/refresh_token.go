@@ -19,10 +19,10 @@ type RefreshToken struct {
 	IPAddress *string    `db:"ip_address"`
 }
 
-// NewRefreshToken 新しいRefreshTokenを作成（UUID v7を使用）
+// NewRefreshToken 新しいRefreshTokenを作成
 func NewRefreshToken(accountID uuid.UUID, tokenHash string, expiresAt time.Time, userAgent, ipAddress *string) *RefreshToken {
 	return &RefreshToken{
-		ID:        uuid.Must(uuid.NewV7()), // UUID v7を使用
+		ID:        uuid.New(),
 		AccountID: accountID,
 		TokenHash: tokenHash,
 		ExpiresAt: expiresAt,

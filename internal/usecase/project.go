@@ -43,12 +43,7 @@ func NewProjectUsecase(
 }
 
 // Create 新しいプロジェクトを作成
-func (u *projectUsecase) Create(ctx context.Context, accountID string, input CreateProjectInput) (*domain.Project, error) {
-	// アカウントIDを検証
-	if err := domain.ValidateAccountID(accountID); err != nil {
-		return nil, err
-	}
-
+func (u *projectUsecase) Create(ctx context.Context, accountID uuid.UUID, input CreateProjectInput) (*domain.Project, error) {
 	// アカウントが存在するか確認
 	account, err := u.accountRepo.GetByID(ctx, accountID)
 	if err != nil {
@@ -66,12 +61,8 @@ func (u *projectUsecase) Create(ctx context.Context, accountID string, input Cre
 		return nil, domain.ErrProjectLimitExceeded
 	}
 
-	project := &domain.Project{
-		ID:          uuid.New().String(),
-		AccountID:   accountID,
-		Name:        input.Name,
-		Description: input.Description,
-	}
+	// Domain層のファクトリメソッドを使用
+	project := domain.NewProject(accountID, input.Name, input.Description)
 
 	// ステータスの処理を文字列として統一
 	if input.Status != nil {
@@ -96,14 +87,7 @@ func (u *projectUsecase) Create(ctx context.Context, accountID string, input Cre
 }
 
 // GetByID IDでプロジェクトを取得
-func (u *projectUsecase) GetByID(ctx context.Context, accountID, projectID string) (*domain.Project, error) {
-	if err := domain.ValidateAccountID(accountID); err != nil {
-		return nil, err
-	}
-	if err := domain.ValidateProjectID(projectID); err != nil {
-		return nil, err
-	}
-
+func (u *projectUsecase) GetByID(ctx context.Context, accountID, projectID uuid.UUID) (*domain.Project, error) {
 	// Verify account exists
 	account, err := u.accountRepo.GetByID(ctx, accountID)
 	if err != nil {
@@ -130,11 +114,7 @@ func (u *projectUsecase) GetByID(ctx context.Context, accountID, projectID strin
 }
 
 // ListByAccountID アカウントIDでプロジェクト一覧をページネーション付きで取得
-func (u *projectUsecase) ListByAccountID(ctx context.Context, accountID string, limit, offset int) ([]*domain.Project, int, error) {
-	if err := domain.ValidateAccountID(accountID); err != nil {
-		return nil, 0, err
-	}
-
+func (u *projectUsecase) ListByAccountID(ctx context.Context, accountID uuid.UUID, limit, offset int) ([]*domain.Project, int, error) {
 	// Verify account exists
 	account, err := u.accountRepo.GetByID(ctx, accountID)
 	if err != nil {
@@ -165,14 +145,7 @@ func (u *projectUsecase) ListByAccountID(ctx context.Context, accountID string, 
 }
 
 // Update プロジェクトを更新
-func (u *projectUsecase) Update(ctx context.Context, accountID, projectID string, input UpdateProjectInput) (*domain.Project, error) {
-	if err := domain.ValidateAccountID(accountID); err != nil {
-		return nil, err
-	}
-	if err := domain.ValidateProjectID(projectID); err != nil {
-		return nil, err
-	}
-
+func (u *projectUsecase) Update(ctx context.Context, accountID, projectID uuid.UUID, input UpdateProjectInput) (*domain.Project, error) {
 	var updatedProject *domain.Project
 
 	// トランザクション内で実行
@@ -234,14 +207,7 @@ func (u *projectUsecase) Update(ctx context.Context, accountID, projectID string
 }
 
 // Delete プロジェクトを削除
-func (u *projectUsecase) Delete(ctx context.Context, accountID, projectID string) error {
-	if err := domain.ValidateAccountID(accountID); err != nil {
-		return err
-	}
-	if err := domain.ValidateProjectID(projectID); err != nil {
-		return err
-	}
-
+func (u *projectUsecase) Delete(ctx context.Context, accountID, projectID uuid.UUID) error {
 	// Verify account exists
 	account, err := u.accountRepo.GetByID(ctx, accountID)
 	if err != nil {

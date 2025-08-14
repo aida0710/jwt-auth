@@ -1,6 +1,6 @@
 -- accounts table
 CREATE TABLE IF NOT EXISTS accounts (
-    id VARCHAR(36) PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY, -- UUID v4
     email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS accounts (
 
 -- projects table
 CREATE TABLE IF NOT EXISTS projects (
-    id VARCHAR(36) PRIMARY KEY,
-    account_id VARCHAR(36) NOT NULL,
+    id VARCHAR(36) PRIMARY KEY, -- UUID v4
+    account_id VARCHAR(36) NOT NULL, -- UUID v4
     name VARCHAR(255) NOT NULL,
     description TEXT,
     status VARCHAR(50) NOT NULL DEFAULT 'active',

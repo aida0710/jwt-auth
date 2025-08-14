@@ -58,7 +58,7 @@ func NewSecurityAuditLog(
 	}
 
 	return &SecurityAuditLog{
-		ID:               uuid.Must(uuid.NewV7()), // UUID v7を使用
+		ID:               uuid.New(),
 		AccountID:        accountID,
 		EventType:        eventType,
 		EventDescription: description,

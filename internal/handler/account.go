@@ -2,14 +2,12 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/aida0710/jwt-auth/internal/api"
 	"github.com/aida0710/jwt-auth/internal/domain"
 	"github.com/aida0710/jwt-auth/internal/logger"
 	"github.com/aida0710/jwt-auth/internal/usecase"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	openapiTypes "github.com/oapi-codegen/runtime/types"
 )
@@ -19,31 +17,21 @@ import (
 // ====================================
 
 // NewAPIAccountFromEntity エンティティからAPIレスポンスに変換
-func NewAPIAccountFromEntity(account *domain.Account) (api.Account, error) {
-	// UUIDのパース（バリデーション済みのはずだが、念のため確認）
-	accountId, err := uuid.Parse(account.ID)
-	if err != nil {
-		return api.Account{}, fmt.Errorf("failed to parse account ID: %w", err)
-	}
-
+func NewAPIAccountFromEntity(account *domain.Account) api.Account {
 	return api.Account{
-		Id:        accountId,
+		Id:        account.ID,
 		Email:     openapiTypes.Email(account.Email),
 		Name:      account.Name,
 		CreatedAt: account.CreatedAt,
 		UpdatedAt: account.UpdatedAt,
-	}, nil
+	}
 }
 
 // NewAccountListResponse アカウント一覧レスポンスを生成
-func NewAccountListResponse(accounts []*domain.Account, total, limit, offset int) (api.AccountListResponse, error) {
+func NewAccountListResponse(accounts []*domain.Account, total, limit, offset int) api.AccountListResponse {
 	apiAccounts := make([]api.Account, len(accounts))
 	for i, account := range accounts {
-		apiAccount, err := NewAPIAccountFromEntity(account)
-		if err != nil {
-			return api.AccountListResponse{}, fmt.Errorf("failed to convert account at index %d: %w", i, err)
-		}
-		apiAccounts[i] = apiAccount
+		apiAccounts[i] = NewAPIAccountFromEntity(account)
 	}
 
 	return api.AccountListResponse{
@@ -51,7 +39,7 @@ func NewAccountListResponse(accounts []*domain.Account, total, limit, offset int
 		Total:    total,
 		Limit:    limit,
 		Offset:   offset,
-	}, nil
+	}
 }
 
 // ====================================
@@ -84,60 +72,8 @@ func (s *Server) ListAccounts(ctx echo.Context, params api.ListAccountsParams) e
 		return handleAccountError(ctx, err)
 	}
 
-	response, err := NewAccountListResponse(accounts, total, limit, offset)
-	if err != nil {
-		s.logger.Error(reqCtx, "Failed to convert accounts to response", err)
-		return ctx.JSON(http.StatusInternalServerError, api.Error{
-			Error: "Internal server error",
-		})
-	}
+	response := NewAccountListResponse(accounts, total, limit, offset)
 	return ctx.JSON(http.StatusOK, response)
-}
-
-// CreateAccount 新しいアカウントを作成
-func (s *Server) CreateAccount(ctx echo.Context) error {
-	reqCtx := ctx.Request().Context()
-
-	var req api.CreateAccountRequest
-	if err := ctx.Bind(&req); err != nil {
-		s.logger.Warn(reqCtx, "Invalid request body", logger.F("error", err.Error()))
-		return ctx.JSON(http.StatusBadRequest, api.Error{
-			Error: "Invalid request body",
-		})
-	}
-
-	s.logger.Info(reqCtx, "Creating new account",
-		logger.F("email", req.Email),
-		logger.F("name", req.Name),
-	)
-
-	input := usecase.CreateInput{
-		Email: string(req.Email),
-		Name:  req.Name,
-	}
-
-	account, err := s.accountUsecase.Create(reqCtx, input)
-	if err != nil {
-		s.logger.Error(reqCtx, "Failed to create account", err,
-			logger.F("email", req.Email),
-		)
-		return handleAccountError(ctx, err)
-	}
-
-	s.logger.Info(reqCtx, "Account created successfully",
-		logger.F("account_id", account.ID),
-	)
-
-	apiAccount, err := NewAPIAccountFromEntity(account)
-	if err != nil {
-		s.logger.Error(reqCtx, "Failed to convert account to response", err,
-			logger.F("account_id", account.ID),
-		)
-		return ctx.JSON(http.StatusInternalServerError, api.Error{
-			Error: "Internal server error",
-		})
-	}
-	return ctx.JSON(http.StatusCreated, apiAccount)
 }
 
 // GetAccount IDでアカウントを取得
@@ -148,7 +84,7 @@ func (s *Server) GetAccount(ctx echo.Context, accountId api.AccountID) error {
 		logger.F("account_id", accountId),
 	)
 
-	account, err := s.accountUsecase.GetByID(reqCtx, accountId.String())
+	account, err := s.accountUsecase.GetByID(reqCtx, accountId)
 	if err != nil {
 		s.logger.Error(reqCtx, "Failed to get account", err,
 			logger.F("account_id", accountId),
@@ -156,15 +92,7 @@ func (s *Server) GetAccount(ctx echo.Context, accountId api.AccountID) error {
 		return handleAccountError(ctx, err)
 	}
 
-	apiAccount, err := NewAPIAccountFromEntity(account)
-	if err != nil {
-		s.logger.Error(reqCtx, "Failed to convert account to response", err,
-			logger.F("account_id", account.ID),
-		)
-		return ctx.JSON(http.StatusInternalServerError, api.Error{
-			Error: "Internal server error",
-		})
-	}
+	apiAccount := NewAPIAccountFromEntity(account)
 	return ctx.JSON(http.StatusOK, apiAccount)
 }
 
@@ -193,7 +121,7 @@ func (s *Server) UpdateAccount(ctx echo.Context, accountId api.AccountID) error 
 		input.Name = req.Name
 	}
 
-	account, err := s.accountUsecase.Update(reqCtx, accountId.String(), input)
+	account, err := s.accountUsecase.Update(reqCtx, accountId, input)
 	if err != nil {
 		s.logger.Error(reqCtx, "Failed to update account", err,
 			logger.F("account_id", accountId),
@@ -205,15 +133,7 @@ func (s *Server) UpdateAccount(ctx echo.Context, accountId api.AccountID) error 
 		logger.F("account_id", accountId),
 	)
 
-	apiAccount, err := NewAPIAccountFromEntity(account)
-	if err != nil {
-		s.logger.Error(reqCtx, "Failed to convert account to response", err,
-			logger.F("account_id", account.ID),
-		)
-		return ctx.JSON(http.StatusInternalServerError, api.Error{
-			Error: "Internal server error",
-		})
-	}
+	apiAccount := NewAPIAccountFromEntity(account)
 	return ctx.JSON(http.StatusOK, apiAccount)
 }
 
@@ -225,7 +145,7 @@ func (s *Server) DeleteAccount(ctx echo.Context, accountId api.AccountID) error 
 		logger.F("account_id", accountId),
 	)
 
-	err := s.accountUsecase.Delete(reqCtx, accountId.String())
+	err := s.accountUsecase.Delete(reqCtx, accountId)
 	if err != nil {
 		s.logger.Error(reqCtx, "Failed to delete account", err,
 			logger.F("account_id", accountId),

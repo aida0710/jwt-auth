@@ -2,16 +2,19 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/aida0710/jwt-auth/internal/auth"
 	"github.com/aida0710/jwt-auth/internal/domain"
 	"github.com/aida0710/jwt-auth/internal/infrastructure/database"
 	"github.com/google/uuid"
 )
 
-// CreateInput アカウント作成用の入力
+// CreateInput アカウント作成用の入力（SignUp専用）
 type CreateInput struct {
-	Email string `json:"email" validate:"required,email"`
-	Name  string `json:"name" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
+	Name     string `json:"name" validate:"required"`
+	Password string `json:"password" validate:"required,min=8"`
 }
 
 // UpdateInput アカウント更新用の入力
@@ -47,11 +50,14 @@ func (u *accountUsecase) Create(ctx context.Context, input CreateInput) (*domain
 		return nil, domain.ErrDuplicateEmail
 	}
 
-	account := &domain.Account{
-		ID:    uuid.New().String(),
-		Email: input.Email,
-		Name:  input.Name,
+	// パスワードをハッシュ化
+	passwordHash, err := auth.HashPassword(input.Password)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
+
+	// Domain層のファクトリメソッドを使用
+	account := domain.NewAccount(input.Email, input.Name, passwordHash)
 
 	if err := account.Validate(); err != nil {
 		return nil, err
@@ -65,11 +71,7 @@ func (u *accountUsecase) Create(ctx context.Context, input CreateInput) (*domain
 }
 
 // GetByID IDでアカウントを取得
-func (u *accountUsecase) GetByID(ctx context.Context, id string) (*domain.Account, error) {
-	if err := domain.ValidateAccountID(id); err != nil {
-		return nil, err
-	}
-
+func (u *accountUsecase) GetByID(ctx context.Context, id uuid.UUID) (*domain.Account, error) {
 	account, err := u.accountRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -121,11 +123,7 @@ func (u *accountUsecase) List(ctx context.Context, limit, offset int) ([]*domain
 }
 
 // Update アカウントを更新
-func (u *accountUsecase) Update(ctx context.Context, id string, input UpdateInput) (*domain.Account, error) {
-	if err := domain.ValidateAccountID(id); err != nil {
-		return nil, err
-	}
-
+func (u *accountUsecase) Update(ctx context.Context, id uuid.UUID, input UpdateInput) (*domain.Account, error) {
 	account, err := u.accountRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -158,11 +156,7 @@ func (u *accountUsecase) Update(ctx context.Context, id string, input UpdateInpu
 }
 
 // Delete アカウントとそのプロジェクトを削除
-func (u *accountUsecase) Delete(ctx context.Context, id string) error {
-	if err := domain.ValidateAccountID(id); err != nil {
-		return err
-	}
-
+func (u *accountUsecase) Delete(ctx context.Context, id uuid.UUID) error {
 	return u.txManager.RunInTransaction(ctx, func(ctx context.Context) error {
 		account, err := u.accountRepo.GetByID(ctx, id)
 		if err != nil {

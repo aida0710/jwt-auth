@@ -17,10 +17,10 @@ type Account struct {
 	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
 }
 
-// NewAccount 新しいAccountを作成（UUID v7を使用）
+// NewAccount 新しいAccountを作成
 func NewAccount(email, name, passwordHash string) *Account {
 	return &Account{
-		ID:           uuid.Must(uuid.NewV7()), // UUID v7を使用
+		ID:           uuid.New(),
 		Email:        email,
 		Name:         name,
 		PasswordHash: passwordHash,
