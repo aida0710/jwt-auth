@@ -8,6 +8,7 @@ import (
 	"github.com/aida0710/jwt-auth/internal/auth"
 	"github.com/aida0710/jwt-auth/internal/domain"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 // AuthConfig 認証ミドルウェアの設定を保持します
@@ -119,5 +120,5 @@ func logSuspiciousTokenAttempt(err error, ipAddress, userAgent string) {
 		return
 	}
 
-	fmt.Printf("[SuspiciousToken] EventType: %s | Description: %s | IP: %s | UserAgent: %s\n", eventType, description, ipAddress, userAgent)
+	log.Warnf("[SuspiciousToken] EventType: %s | Description: %s | IP: %s | UserAgent: %s\n", eventType, description, ipAddress, userAgent)
 }

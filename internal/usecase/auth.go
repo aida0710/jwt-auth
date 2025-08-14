@@ -10,6 +10,7 @@ import (
 	"github.com/aida0710/jwt-auth/internal/auth"
 	"github.com/aida0710/jwt-auth/internal/domain"
 	"github.com/google/uuid"
+	"github.com/labstack/gommon/log"
 )
 
 // AuthUsecase 認証関連のユースケース
@@ -244,16 +245,13 @@ func (u *AuthUsecase) logSecurityEvent(
 		return
 	}
 
-	// データベースに記録
 	if u.securityAuditRepo != nil {
 		if err := u.securityAuditRepo.Create(ctx, auditLog); err != nil {
 			fmt.Printf("[ERROR] Failed to save security audit log: %v\n", err)
 		}
 	}
 
-	// コンソールにも出力（監視用）
-	fmt.Printf("[SECURITY ALERT] AccountID: %s, Event: %s, Description: %s, IP: %s\n",
-		accountID.String(), eventType, description, ipAddress)
+	log.Warnf("[SECURITY ALERT] AccountID: %s, Event: %s, Description: %s, IP: %s\n", accountID.String(), eventType, description, ipAddress)
 }
 
 // generateTokens アクセストークンとリフレッシュトークンを生成
