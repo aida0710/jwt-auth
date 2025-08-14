@@ -100,7 +100,7 @@ func sendRequest(t *testing.T, method, url string, body interface{}, headers map
 	fmt.Printf("\n🔗 リクエスト詳細:\n")
 	fmt.Printf("  メソッド: %s\n", method)
 	fmt.Printf("  URL: %s\n", url)
-	fmt.Printf("  ヘッダー:\n")
+	// fmt.Printf("  ヘッダー:\n")
 	for key, values := range req.Header {
 		fmt.Printf("    %s: %s\n", key, strings.Join(values, ", "))
 	}
@@ -123,10 +123,10 @@ func sendRequest(t *testing.T, method, url string, body interface{}, headers map
 	// レスポンス詳細を表示
 	fmt.Printf("\n📥 レスポンス詳細:\n")
 	fmt.Printf("  ステータスコード: %d (%s)\n", resp.StatusCode, resp.Status)
-	fmt.Printf("  ヘッダー:\n")
-	for key, values := range resp.Header {
-		fmt.Printf("    %s: %s\n", key, strings.Join(values, ", "))
-	}
+	//fmt.Printf("  ヘッダー:\n")
+	//for key, values := range resp.Header {
+	//	fmt.Printf("    %s: %s\n", key, strings.Join(values, ", "))
+	//}
 	fmt.Printf("\n📄 レスポンスボディ:\n%s\n", prettyJSON(respBody))
 
 	return resp, respBody
@@ -320,7 +320,8 @@ func TestE2E_CompleteFlow(t *testing.T) {
 			"Authorization": "Bearer " + accessToken,
 		}
 
-		resp, body := sendRequest(t, "POST", baseURL+"/projects", projectReq, headers)
+		projectURL := fmt.Sprintf("%s/accounts/%s/projects", baseURL, accountID)
+		resp, body := sendRequest(t, "POST", projectURL, projectReq, headers)
 
 		if resp.StatusCode != http.StatusCreated {
 			t.Errorf("❌ プロジェクト作成失敗: ステータスコード %d", resp.StatusCode)

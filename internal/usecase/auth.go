@@ -254,12 +254,6 @@ func (u *AuthUsecase) logSecurityEvent(
 	// コンソールにも出力（監視用）
 	fmt.Printf("[SECURITY ALERT] AccountID: %s, Event: %s, Description: %s, IP: %s\n",
 		accountID.String(), eventType, description, ipAddress)
-
-	// TODO: 本番環境では以下も実装
-	// - メール通知（アカウント所有者へ）
-	// - Slack/Teams通知（セキュリティチームへ）
-	// - SIEM連携（Splunk, ELK Stackなど）
-	// - アカウントロックの自動化（疑わしいアクティビティが継続する場合）
 }
 
 // generateTokens アクセストークンとリフレッシュトークンを生成

@@ -1,14 +1,12 @@
 package middleware
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/aida0710/jwt-auth/internal/auth"
 	"github.com/aida0710/jwt-auth/internal/domain"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -62,9 +60,8 @@ func NewAuthMiddleware(config AuthConfig) echo.MiddlewareFunc {
 			// トークンを検証
 			claims, err := config.JWTManager.ValidateAccessToken(tokenString)
 			if err != nil {
-				// セキュリティ上注意すべきエラーを記録
 				if config.SecurityAuditRepo != nil {
-					logSuspiciousTokenAttempt(c.Request().Context(), config.SecurityAuditRepo, err, c.RealIP(), c.Request().UserAgent())
+					logSuspiciousTokenAttempt(err, c.RealIP(), c.Request().UserAgent())
 				}
 
 				// エラーメッセージを適切に返す
@@ -81,7 +78,7 @@ func NewAuthMiddleware(config AuthConfig) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, errorMsg)
 			}
 
-			// アカウントIDとメールをコンテキストに設定
+			// アカウントIDとメールを共通で使えるようにコンテキストへ設定
 			c.Set(string(AccountIDKey), claims.AccountID)
 			c.Set(string(EmailKey), claims.Email)
 
@@ -96,18 +93,12 @@ func isPublicPath(path, publicPath string) bool {
 		return true
 	}
 
-	// プレフィックスマッチ（ワイルドカード対応）
-	if strings.HasSuffix(publicPath, "*") {
-		prefix := strings.TrimSuffix(publicPath, "*")
-		return strings.HasPrefix(path, prefix)
-	}
-
+	// 非公開ディレクトリ
 	return false
 }
 
 // logSuspiciousTokenAttempt 不審なトークン試行をログに記録
-func logSuspiciousTokenAttempt(ctx context.Context, repo domain.SecurityAuditLogRepository, err error, ipAddress, userAgent string) {
-	// 特に重要なセキュリティイベントを判定
+func logSuspiciousTokenAttempt(err error, ipAddress, userAgent string) {
 	var eventType domain.SecurityEventType
 	var description string
 
@@ -128,34 +119,5 @@ func logSuspiciousTokenAttempt(ctx context.Context, repo domain.SecurityAuditLog
 		return
 	}
 
-	// セキュリティ監査ログを作成
-	var ipAddressPtr, userAgentPtr *string
-	if ipAddress != "" {
-		ipAddressPtr = &ipAddress
-	}
-	if userAgent != "" {
-		userAgentPtr = &userAgent
-	}
-
-	// accountIDがない場合は"UNKNOWN"を使用
-	auditLog, err := domain.NewSecurityAuditLog(
-		uuid.Nil, // トークンが無効なためアカウントIDが不明
-		eventType,
-		description,
-		ipAddressPtr,
-		userAgentPtr,
-		nil,
-	)
-	if err != nil {
-		fmt.Printf("[ERROR] Failed to create security audit log: %v\n", err)
-		return
-	}
-
-	// データベースに記録（エラーはログに出力するが処理は継続）
-	if err := repo.Create(ctx, auditLog); err != nil {
-		fmt.Printf("[ERROR] Failed to save security audit log: %v\n", err)
-	}
-
-	// コンソールにも警告を出力
-	fmt.Printf("[SECURITY WARNING] %s from IP: %s, UserAgent: %s\n", description, ipAddress, userAgent)
+	fmt.Printf("[SuspiciousToken] EventType: %s | Description: %s | IP: %s | UserAgent: %s\n", eventType, description, ipAddress, userAgent)
 }
