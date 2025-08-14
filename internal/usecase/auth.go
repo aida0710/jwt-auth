@@ -70,7 +70,7 @@ func (u *AuthUsecase) SignUp(ctx context.Context, input SignUpInput) (*AuthToken
 	}
 
 	passwordHash, err := auth.HashPassword(input.Password)
-	fmt.Printf("passwordHash: %s\n", passwordHash)
+	// fmt.Printf("passwordHash: %s\n", passwordHash)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
