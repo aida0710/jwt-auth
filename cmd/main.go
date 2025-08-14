@@ -44,6 +44,22 @@ func main() {
 	// すべてのミドルウェアを設定
 	middleware.Setup(e)
 
+	// 認証ミドルウェアの設定
+	authMiddleware := middleware.NewAuthMiddleware(middleware.AuthConfig{
+		JWTManager: container.GetJWTManager(),
+		PublicPaths: []string{
+			"/",
+			"/api/v1/health",
+			"/api/v1/auth/signup",
+			"/api/v1/auth/login",
+			"/api/v1/auth/refresh",
+		},
+		SecurityAuditRepo: container.GetSecurityAuditRepo(),
+	})
+
+	// 認証ミドルウェアをグローバルに適用
+	e.Use(authMiddleware)
+
 	// OpenAPIハンドラーの登録
 	// baseURLに/api/v1を指定
 	api.RegisterHandlersWithBaseURL(e, container.GetHandler(), "/api/v1")
