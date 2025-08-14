@@ -11,10 +11,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// ====================================
-// DTO変換関数
-// ====================================
-
 // NewAPIProjectFromEntity エンティティからAPIレスポンスに変換
 func NewAPIProjectFromEntity(project *domain.Project) api.Project {
 	apiProject := api.Project{
@@ -44,10 +40,6 @@ func NewAPIProjectFromEntity(project *domain.Project) api.Project {
 
 	return apiProject
 }
-
-// ====================================
-// プロジェクト関連のハンドラー実装
-// ====================================
 
 // ListProjects アカウントのプロジェクト一覧を取得
 func (s *Server) ListProjects(ctx echo.Context, accountId api.AccountID) error {
@@ -215,10 +207,6 @@ func (s *Server) DeleteProject(ctx echo.Context, accountId api.AccountID, projec
 
 	return ctx.NoContent(http.StatusNoContent)
 }
-
-// ====================================
-// エラーハンドリング
-// ====================================
 
 // handleProjectError プロジェクト関連のエラーをHTTPレスポンスに変換
 func handleProjectError(ctx echo.Context, err error) error {

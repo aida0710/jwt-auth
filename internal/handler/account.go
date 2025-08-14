@@ -12,10 +12,6 @@ import (
 	openapiTypes "github.com/oapi-codegen/runtime/types"
 )
 
-// ====================================
-// DTO変換関数
-// ====================================
-
 // NewAPIAccountFromEntity エンティティからAPIレスポンスに変換
 func NewAPIAccountFromEntity(account *domain.Account) api.Account {
 	return api.Account{
@@ -26,10 +22,6 @@ func NewAPIAccountFromEntity(account *domain.Account) api.Account {
 		UpdatedAt: account.UpdatedAt,
 	}
 }
-
-// ====================================
-// アカウント関連のハンドラー実装
-// ====================================
 
 // ListAccounts アカウント一覧を取得
 func (s *Server) ListAccounts(ctx echo.Context) error {
@@ -136,10 +128,6 @@ func (s *Server) DeleteAccount(ctx echo.Context, accountId api.AccountID) error 
 
 	return ctx.NoContent(http.StatusNoContent)
 }
-
-// ====================================
-// エラーハンドリング
-// ====================================
 
 // handleAccountError アカウント関連のエラーをHTTPレスポンスに変換
 func handleAccountError(ctx echo.Context, err error) error {

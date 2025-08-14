@@ -13,11 +13,8 @@ import (
 
 // AuthConfig 認証ミドルウェアの設定を保持します
 type AuthConfig struct {
-	JWTManager *auth.JWTManager
-	// 認証不要のパスのリスト
+	JWTManager  *auth.JWTManager
 	PublicPaths []string
-	// セキュリティ監査ログリポジトリ（オプション）
-	SecurityAuditRepo domain.SecurityAuditLogRepository
 }
 
 // contextKey コンテキストキーの型です
@@ -61,9 +58,7 @@ func NewAuthMiddleware(config AuthConfig) echo.MiddlewareFunc {
 			// トークンを検証
 			claims, err := config.JWTManager.ValidateAccessToken(tokenString)
 			if err != nil {
-				if config.SecurityAuditRepo != nil {
-					logSuspiciousTokenAttempt(err, c.RealIP(), c.Request().UserAgent())
-				}
+				logSuspiciousTokenAttempt(err, c.RealIP(), c.Request().UserAgent())
 
 				// エラーメッセージを適切に返す
 				errorMsg := "invalid or expired token"

@@ -330,13 +330,6 @@ func HashToken(token string) string {
 // GenerateSecureToken はセキュアなランダムトークンを生成します
 // Weak Random Generation Vulnerabilityを防ぐ
 // 参照: https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#secure-random-number-generation
-//
-// 使用例:
-// - パスワードリセットトークン
-// - メール確認トークン
-// - APIキー生成
-// - セッションID生成
-//
 // TODO: 現在未使用だが、今後の機能拡張（パスワードリセット、メール確認など）で使用予定
 func GenerateSecureToken() (string, error) {
 	b := make([]byte, 32)

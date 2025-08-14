@@ -47,6 +47,7 @@ func main() {
 	// 認証ミドルウェアの設定
 	authMiddleware := middleware.NewAuthMiddleware(middleware.AuthConfig{
 		JWTManager: container.GetJWTManager(),
+		// public apiのみを指定、デフォルトがプライベート
 		PublicPaths: []string{
 			"/",
 			"/api/v1/health",
@@ -54,7 +55,6 @@ func main() {
 			"/api/v1/auth/login",
 			"/api/v1/auth/refresh",
 		},
-		SecurityAuditRepo: container.GetSecurityAuditRepo(),
 	})
 
 	// 認証ミドルウェアをグローバルに適用
